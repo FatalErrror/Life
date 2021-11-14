@@ -1,28 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace Life
 {
     class Program
     {
-        [DllImport("kernel32")]
-        static extern IntPtr GetConsoleWindow();
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
-        {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
-
-            public Vector2 Position => new Vector2(left, top);
-        }
-
-        [DllImport("user32.dll")]
-        public static extern int GetWindowRect(IntPtr hwnd, ref RECT rc);
-
         static void Main(string[] args)
         {
             Vector2 ScreenSize = new Vector2(100, 40);
@@ -31,35 +15,49 @@ namespace Life
 
             Buffer buffer = new Buffer(ScreenSize);
 
+            Vector2 pos = new Vector2(50, 20);
+
+            ButtonInput SpaceInput = new ButtonInput(KeyboardInput.KeyCode.Space);
+
             while (true)
             {
-                Vector2 position = MouseOperations.GetCursorPosition().Vector;
-                RECT rect = new RECT();
-                GetWindowRect(GetConsoleWindow(), ref rect);
-
-                position -= rect.Position;
-
                 
-
-
                 buffer.Fill(' ');
-
-                //buffer.DrawVerticalLine(Vector2.Right*20, ScreenSize.Y, '|');
 
                 buffer.DrawRectengle(Vector2.Zero, new Vector2(20, ScreenSize.Y), '+', '-', '|');
                 buffer.DrawRectengle(Vector2.Right * 19, new Vector2(ScreenSize.X - 19, ScreenSize.Y), '+', '-', '|');
 
+                buffer.DrawText(Vector2.One, "Pos: "+ConsoleMouseInput.GetMousePosition().ToString());
+                buffer.DrawText(Vector2.Right + Vector2.Up * 2, "Caps: "+ Console.CapsLock.ToString());
+                buffer.DrawText(Vector2.Right + Vector2.Up * 3, "Space: "+ SpaceInput.State.ToString());
+
+                buffer.DrawText(Vector2.Right + Vector2.Up*38, " > Exit");
+
+
+
+
+
+
                 buffer.DrawFillRectengle(new Vector2(40, 10), Vector2.One * 20, '#');
                 buffer.DrawFillRectengle(new Vector2(45, 15), Vector2.One * 10, ' ');
 
+                if (SpaceInput.Pressed())
+                {
+                    pos = ConsoleMouseInput.GetMousePosition();
+                    if (pos.Y == 38 && pos.X < 19) break;
+                }
+                buffer[pos] = '@';
 
-                buffer[50, 20] = '@';
-                buffer.DrawText(Vector2.Right * 20 + Vector2.Up*2, position.ToString());
 
-                
-                
+
+
                 buffer.Render();
-                Thread.Sleep(10);
+                /*buffer.ColorRender(new List<Buffer.ColorRenderData>(new Buffer.ColorRenderData[] 
+                    { 
+                        new Buffer.ColorRenderData(pos, ConsoleColor.White, ConsoleColor.Gray)
+                    }
+                ));*/
+                //Thread.Sleep(10);
             }
 
         }
@@ -73,7 +71,54 @@ namespace Life
             Console.Title = "Life";
             Console.CursorVisible = false;
         }
+
     }
+
+    public class ButtonInput
+    {
+        public InputMod Mod 
+        { 
+            get => _isToggle?InputMod.Toggle:InputMod.Button;
+            set => _isToggle = value == InputMod.Toggle;
+        }
+
+        public bool State => KeyboardInput.IsKeyDown(_key);
+
+        private KeyboardInput.KeyCode _key;
+
+        private bool _isToggle = false;
+        private bool _capsUnpressed = true;
+
+        public ButtonInput(KeyboardInput.KeyCode key)
+        {
+            _key = key;
+        }
+
+        public bool Pressed()
+        {
+            if (KeyboardInput.IsKeyDown(_key))
+            {
+                if (_capsUnpressed)
+                {
+                    _capsUnpressed = false;
+                    return true;
+                }
+                else return _isToggle;
+            }
+            else
+            {
+                _capsUnpressed = true;
+                return false;
+            }
+        }
+
+        public enum InputMod
+        {
+            Button,
+            Toggle
+        }
+    }
+
 
 
     public class Buffer
@@ -100,7 +145,13 @@ namespace Life
         { 
             get => buffer[y * Width + x]; 
             set => buffer[y * Width + x] = value; 
-        } 
+        }
+
+        public char this[Vector2 point]
+        {
+            get => buffer[point.Y * Width + point.X];
+            set => buffer[point.Y * Width + point.X] = value;
+        }
 
 
         public void Fill(char value) => Array.Fill<char>(buffer, value);
@@ -225,6 +276,7 @@ namespace Life
 
         public void Render()
         {
+            SetDefaultTheme();
             Console.SetCursorPosition(0, 0);
             int j = Width;
             for (int i = 0; i < buffer.Length; i++)
@@ -238,7 +290,57 @@ namespace Life
                 }
             }
         }
+
+        public void Render(List<ColorRenderData> renderData)
+        {
+            //SetDefaultTheme();
+            Console.SetCursorPosition(0, 0);
+            int j = Width;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                Console.Out.Write(buffer[i]);
+                j--;
+                if (j == 0)
+                {
+                    j = Width;
+                    Console.Out.Write('\n');
+                }
+            }
+        }
+
+        public void SetDefaultTheme()
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.Black;
+        }
+
+        public void ColorRender(List<ColorRenderData> renderData)
+        {
+            foreach (var item in renderData)
+            {
+                Console.SetCursorPosition(item.Position.X, item.Position.Y);
+                Console.ForegroundColor = item.Foreground;
+                Console.BackgroundColor = item.Background;
+                Console.Write(this[item.Position]);
+            }
+        }
+
+        public struct ColorRenderData
+        {
+            public Vector2 Position;
+            public ConsoleColor Foreground;
+            public ConsoleColor Background;
+
+            public ColorRenderData(Vector2 position, ConsoleColor foreground, ConsoleColor background)
+            {
+                Position = position;
+                Foreground = foreground;
+                Background = background;
+            }
+        }
     }
+
+
 
     
     public struct Vector2
@@ -303,6 +405,51 @@ namespace Life
         public override int GetHashCode() => HashCode.Combine(X, Y);
 
         public override string ToString() => $"({X}, {Y})";
+    }
+
+    public class ConsoleMouseInput
+    {
+        [DllImport("kernel32")]
+        public static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowRect(IntPtr hwnd, ref RECT rc);
+
+
+        static readonly Vector2 LeftTopOffset = new Vector2(8, 31);
+        static readonly Vector2 RightBottomOffset = new Vector2(40, 60);
+
+
+        public static Vector2 GetMousePosition()
+        {
+            Vector2 position = MouseOperations.GetCursorPosition().Vector;
+
+            RECT rect = new RECT();
+            GetWindowRect(GetConsoleWindow(), ref rect);
+
+            position -= LeftTopOffset;
+            position -= rect.Position;
+
+            float kX = Console.WindowWidth / (float)(rect.right - rect.left - RightBottomOffset.X);
+            float kY = Console.WindowHeight / (float)(rect.bottom - rect.top - RightBottomOffset.Y);
+
+            position.X = (int)(position.X * kX);
+            position.Y = (int)(position.Y * kY);
+
+            return position;
+        }
+
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+
+            public Vector2 Position => new Vector2(left, top);
+        }
     }
 
 
@@ -381,6 +528,29 @@ namespace Life
             public Vector2 Vector => new Vector2(X, Y);
         }
 
+    }
+
+    public static class KeyboardInput
+    {
+        private const int KeyPressed = 0x8000;
+
+        public static bool IsKeyDown(KeyCode key)
+        {
+            return (GetKeyState((int)key) & KeyPressed) != 0;
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern short GetKeyState(int key);
+
+        //All keys -> https://docs.microsoft.com/ru-ru/dotnet/api/system.windows.forms.keys?view=netframework-4.8
+        public enum KeyCode : int
+        {
+            Space = 32,
+            Left = 37,
+            Up = 38,
+            Right = 39,
+            Down = 40
+        }
     }
 
 }
