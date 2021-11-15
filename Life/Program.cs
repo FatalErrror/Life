@@ -9,7 +9,9 @@ namespace Life
     {
         static void Main(string[] args)
         {
-            Vector2 ScreenSize = new Vector2(100, 40);
+            Console.Title = "Life";
+            Console.CursorVisible = false;
+            Vector2 ScreenSize = ConsoleSizeSetuper.GetSize();
 
             ConsoleInit(ScreenSize);
 
@@ -62,6 +64,8 @@ namespace Life
 
         }
 
+
+
         static void ConsoleInit(Vector2 size)
         {
             Console.WindowWidth = size.X;
@@ -72,6 +76,54 @@ namespace Life
             Console.CursorVisible = false;
         }
 
+    }
+
+    public static class ConsoleSizeSetuper
+    {
+        private static void SetCursorPosition(Vector2 pos) => Console.SetCursorPosition(pos.X, pos.Y); 
+        public static Vector2 GetSize()
+        {
+            ButtonInput Cancel = new ButtonInput(KeyboardInput.KeyCode.Escape);
+            ButtonInput Apply = new ButtonInput(KeyboardInput.KeyCode.Enter);
+
+            Vector2 startSize = new Vector2(Console.WindowWidth, Console.WindowHeight);
+            Vector2 size = new Vector2();
+
+            while (true)
+            {
+                if (Cancel.Pressed())
+                {
+                    size = startSize;
+                    break;
+                }
+                if (Apply.Pressed())
+                {
+                    break;
+                }
+
+                size.X = Console.WindowWidth;
+                size.Y = Console.WindowHeight;
+
+                SetCursorPosition(Vector2.Zero);
+
+                for (int i = 0; i < size.X; i++)
+                {
+                    if (i == size.X / 2) Console.Write('╤');
+                    else if (i > size.X / 2 - 3 && i < size.X / 2 + 3) Console.Write('═');
+                    else Console.Write(' ');
+                }
+
+                
+                Console.Write('╤');
+
+                //9552 =
+                //9553 ||
+                //═ (9552) |║ (9553) |╒ (9554) |╓ (9555) |╔ (9556) |╕ (9557) |╖ (9558) |╗ (9559) |╘ (9560) |╙ (9561) |╚ (9562) |╛ (9563) |╜ (9564) |╝ (9565) |╞ (9566) |╟ (9567) |╠ (9568) |╡ (9569) |╢ (9570) |╣ (9571) |╤ (9572) |╥ (9573) |╦ (9574) |╧ (9575) |╨ (9576) |╩ (9577) |╪ (9578) |╫ (9579) |╬ (9580)
+
+            }
+
+            return size;
+        }
     }
 
     public class ButtonInput
@@ -89,6 +141,8 @@ namespace Life
         private bool _isToggle = false;
         private bool _capsUnpressed = true;
 
+
+
         public ButtonInput(KeyboardInput.KeyCode key)
         {
             _key = key;
@@ -103,13 +157,14 @@ namespace Life
                     _capsUnpressed = false;
                     return true;
                 }
-                else return _isToggle;
+                else return false;
             }
             else
             {
                 _capsUnpressed = true;
                 return false;
             }
+
         }
 
         public enum InputMod
@@ -545,6 +600,8 @@ namespace Life
         //All keys -> https://docs.microsoft.com/ru-ru/dotnet/api/system.windows.forms.keys?view=netframework-4.8
         public enum KeyCode : int
         {
+            Enter = 13,
+            Escape = 27,
             Space = 32,
             Left = 37,
             Up = 38,
