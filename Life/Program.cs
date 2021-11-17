@@ -9,9 +9,7 @@ namespace Life
     {
         static void Main(string[] args)
         {
-            Console.Title = "Life";
-            Console.CursorVisible = false;
-            Vector2 ScreenSize = ConsoleSizeSetuper.GetSize();
+            Vector2 ScreenSize = new Vector2(100, 40);
 
             ConsoleInit(ScreenSize);
 
@@ -20,20 +18,23 @@ namespace Life
             Vector2 pos = new Vector2(50, 20);
 
             ButtonInput SpaceInput = new ButtonInput(KeyboardInput.KeyCode.Space);
+            SpaceInput.Mod = ButtonInput.InputMod.Toggle;
 
             while (true)
             {
-                
+
                 buffer.Fill(' ');
 
                 buffer.DrawRectengle(Vector2.Zero, new Vector2(20, ScreenSize.Y), '+', '-', '|');
                 buffer.DrawRectengle(Vector2.Right * 19, new Vector2(ScreenSize.X - 19, ScreenSize.Y), '+', '-', '|');
 
-                buffer.DrawText(Vector2.One, "Pos: "+ConsoleMouseInput.GetMousePosition().ToString());
-                buffer.DrawText(Vector2.Right + Vector2.Up * 2, "Caps: "+ Console.CapsLock.ToString());
-                buffer.DrawText(Vector2.Right + Vector2.Up * 3, "Space: "+ SpaceInput.State.ToString());
+                buffer.DrawText(Vector2.One, "Pos: " + ConsoleMouseInput.GetMousePosition().ToString());
+                buffer.DrawText(Vector2.Right + Vector2.Up * 2, "Caps: " + Console.CapsLock.ToString());
+                buffer.DrawText(Vector2.Right + Vector2.Up * 3, "Space: " + SpaceInput.State.ToString());
+                buffer.DrawText(Vector2.Right + Vector2.Up * 4, "Space: " + SpaceInput.Pressed().ToString());
 
-                buffer.DrawText(Vector2.Right + Vector2.Up*38, " > Exit");
+
+                buffer.DrawText(Vector2.Right + Vector2.Up * 38, " > Exit");
 
 
 
@@ -43,19 +44,19 @@ namespace Life
                 buffer.DrawFillRectengle(new Vector2(40, 10), Vector2.One * 20, '#');
                 buffer.DrawFillRectengle(new Vector2(45, 15), Vector2.One * 10, ' ');
 
-                if (SpaceInput.Pressed())
+                /*if (SpaceInput.Pressed())
                 {
                     pos = ConsoleMouseInput.GetMousePosition();
                     if (pos.Y == 38 && pos.X < 19) break;
-                }
+                }*/
                 buffer[pos] = '@';
 
 
 
 
                 buffer.Render();
-                /*buffer.ColorRender(new List<Buffer.ColorRenderData>(new Buffer.ColorRenderData[] 
-                    { 
+                /*buffer.ColorRender(new List<Buffer.ColorRenderData>(new Buffer.ColorRenderData[]
+                    {
                         new Buffer.ColorRenderData(pos, ConsoleColor.White, ConsoleColor.Gray)
                     }
                 ));*/
@@ -64,12 +65,10 @@ namespace Life
 
         }
 
-
-
         static void ConsoleInit(Vector2 size)
         {
             Console.WindowWidth = size.X;
-            Console.WindowHeight = size.Y+1;
+            Console.WindowHeight = size.Y + 1;
 
             //Console.ForegroundColor = ConsoleColor.Green;
             Console.Title = "Life";
@@ -78,59 +77,11 @@ namespace Life
 
     }
 
-    public static class ConsoleSizeSetuper
-    {
-        private static void SetCursorPosition(Vector2 pos) => Console.SetCursorPosition(pos.X, pos.Y); 
-        public static Vector2 GetSize()
-        {
-            ButtonInput Cancel = new ButtonInput(KeyboardInput.KeyCode.Escape);
-            ButtonInput Apply = new ButtonInput(KeyboardInput.KeyCode.Enter);
-
-            Vector2 startSize = new Vector2(Console.WindowWidth, Console.WindowHeight);
-            Vector2 size = new Vector2();
-
-            while (true)
-            {
-                if (Cancel.Pressed())
-                {
-                    size = startSize;
-                    break;
-                }
-                if (Apply.Pressed())
-                {
-                    break;
-                }
-
-                size.X = Console.WindowWidth;
-                size.Y = Console.WindowHeight;
-
-                SetCursorPosition(Vector2.Zero);
-
-                for (int i = 0; i < size.X; i++)
-                {
-                    if (i == size.X / 2) Console.Write('╤');
-                    else if (i > size.X / 2 - 3 && i < size.X / 2 + 3) Console.Write('═');
-                    else Console.Write(' ');
-                }
-
-                
-                Console.Write('╤');
-
-                //9552 =
-                //9553 ||
-                //═ (9552) |║ (9553) |╒ (9554) |╓ (9555) |╔ (9556) |╕ (9557) |╖ (9558) |╗ (9559) |╘ (9560) |╙ (9561) |╚ (9562) |╛ (9563) |╜ (9564) |╝ (9565) |╞ (9566) |╟ (9567) |╠ (9568) |╡ (9569) |╢ (9570) |╣ (9571) |╤ (9572) |╥ (9573) |╦ (9574) |╧ (9575) |╨ (9576) |╩ (9577) |╪ (9578) |╫ (9579) |╬ (9580)
-
-            }
-
-            return size;
-        }
-    }
-
     public class ButtonInput
     {
-        public InputMod Mod 
-        { 
-            get => _isToggle?InputMod.Toggle:InputMod.Button;
+        public InputMod Mod
+        {
+            get => _isToggle ? InputMod.Toggle : InputMod.Button;
             set => _isToggle = value == InputMod.Toggle;
         }
 
@@ -140,8 +91,7 @@ namespace Life
 
         private bool _isToggle = false;
         private bool _capsUnpressed = true;
-
-
+        private bool _toggleState = false;
 
         public ButtonInput(KeyboardInput.KeyCode key)
         {
@@ -150,21 +100,25 @@ namespace Life
 
         public bool Pressed()
         {
+            bool buttoen;
             if (KeyboardInput.IsKeyDown(_key))
             {
                 if (_capsUnpressed)
                 {
                     _capsUnpressed = false;
-                    return true;
+                    buttoen = true;
+                    _toggleState = !_toggleState;
                 }
-                else return false;
+                else buttoen = false;
             }
             else
             {
                 _capsUnpressed = true;
-                return false;
+                buttoen = false;
             }
 
+            if (_isToggle) return _toggleState;
+            else return buttoen;
         }
 
         public enum InputMod
@@ -196,10 +150,10 @@ namespace Life
             buffer = new char[Width * Height];
         }
 
-        public char this[int x, int y] 
-        { 
-            get => buffer[y * Width + x]; 
-            set => buffer[y * Width + x] = value; 
+        public char this[int x, int y]
+        {
+            get => buffer[y * Width + x];
+            set => buffer[y * Width + x] = value;
         }
 
         public char this[Vector2 point]
@@ -233,7 +187,7 @@ namespace Life
             {
                 buffer[j] = value;
             }
-            iterator = Width * (LeftTop.Y+Size.Y-1) + LeftTop.X;
+            iterator = Width * (LeftTop.Y + Size.Y - 1) + LeftTop.X;
             for (int j = iterator; j < iterator + Size.X; j++)
             {
                 buffer[j] = value;
@@ -262,7 +216,7 @@ namespace Life
             {
                 buffer[j] = horizontal;
             }
-            iterator = Width * (LeftTop.Y + Size.Y-1) + LeftTop.X;
+            iterator = Width * (LeftTop.Y + Size.Y - 1) + LeftTop.X;
             for (int j = iterator; j < iterator + Size.X; j++)
             {
                 buffer[j] = horizontal;
@@ -281,9 +235,9 @@ namespace Life
             }
 
             this[LeftTop.X, LeftTop.Y] = corner;
-            this[LeftTop.X + Size.X-1, LeftTop.Y] = corner;
-            this[LeftTop.X, LeftTop.Y + Size.Y-1] = corner;
-            this[LeftTop.X + Size.X-1, LeftTop.Y + Size.Y-1] = corner;
+            this[LeftTop.X + Size.X - 1, LeftTop.Y] = corner;
+            this[LeftTop.X, LeftTop.Y + Size.Y - 1] = corner;
+            this[LeftTop.X + Size.X - 1, LeftTop.Y + Size.Y - 1] = corner;
 
         }
 
@@ -297,7 +251,7 @@ namespace Life
             int iterator;
 
             iterator = Width * LeftTop.Y + LeftTop.X;
-            for (int j = iterator; j < buffer.Length; j+= Width)
+            for (int j = iterator; j < buffer.Length; j += Width)
             {
                 buffer[j] = value;
             }
@@ -397,7 +351,7 @@ namespace Life
 
 
 
-    
+
     public struct Vector2
     {
         public int X;
@@ -406,16 +360,16 @@ namespace Life
         /// <summary>
         /// Length of vector in square
         /// </summary>
-        public int SqrMagnetude => X * X + Y * Y; 
+        public int SqrMagnetude => X * X + Y * Y;
         /// <summary>
         /// Length of vector
         /// </summary>
-        public int Magnetude => (int)Math.Sqrt(X * X + Y * Y); 
+        public int Magnetude => (int)Math.Sqrt(X * X + Y * Y);
 
         /// <summary>
         /// Vector wich length equal 1
         /// </summary>
-        //public Vector2 Normolized => this/; 
+        //public Vector2 Normolized => this/;
 
 
         public Vector2(Vector2 v)
@@ -600,14 +554,116 @@ namespace Life
         //All keys -> https://docs.microsoft.com/ru-ru/dotnet/api/system.windows.forms.keys?view=netframework-4.8
         public enum KeyCode : int
         {
-            Enter = 13,
-            Escape = 27,
             Space = 32,
             Left = 37,
             Up = 38,
             Right = 39,
             Down = 40
         }
+    }
+
+    class Creature//¤
+    {
+        public int DeathCount { get; set; }
+
+        public long ID { get; }
+        public Vector2 Position { get; set; }
+        public string Name { get; }
+
+        public int FullHP { get; set; }
+
+        public int HP { get; set; }
+        public int Damage { get; set; }
+        public int Lvl { get; set; }
+
+        public int Expa { get; set; }
+
+        public float MissChance { get; set; }
+
+        public void LvlUp()
+        {
+            Lvl++;
+
+            MissChance -= 0.001f;
+
+            FullHP = (int)(FullHP * 1.1);
+            Damage = (int)(Damage * 1.05);
+
+            Expa = Lvl * 20;
+
+            HP = FullHP;
+
+        }
+
+        public void SetDamage(int damage)
+        {
+            HP -= damage;
+            if (HP <= 0) DeathCount = 1;
+        }
+
+        public void Move(Vector2 movement)
+        {
+            Position += movement;
+            Position = new Vector2(Position.X, Position.Y);
+        }
+        public void Move(Vector2 movement, Vector2 size)
+        {
+            Position += movement;
+            Position = new Vector2(Position.X % size.X, Position.Y % size.Y);
+        }
+
+        public Creature(int id, string name, Vector2 position)
+        {
+            ID = id;
+            Name = name;
+
+            Lvl = 1;
+            Position = position;
+
+            MissChance = 0.2f;
+
+            FullHP = 100;
+            Damage = 20;
+
+            Expa = Lvl * 20;
+
+            HP = FullHP;
+
+            DeathCount = 0;
+        }
+
+        public static void Bump(Creature c1, Creature c2)
+        {
+            Random r = new Random();
+
+            if (c1.HP * 2 < c2.HP)
+            {
+                if (r.Next(0, 10) < 3)
+                {
+                    c1.SetDamage(c2.Damage / 4);
+                    c1.Move(c1.Position - c2.Position);
+                    return;
+                }
+            }
+
+            if(c2.HP * 2 < c1.HP)
+            {
+                if (r.Next(0, 10) < 3)
+                {
+                    c2.SetDamage(c1.Damage / 4);
+                    c2.Move(c2.Position - c1.Position);
+                    return;
+                }
+            }
+
+            if (r.Next(0, 100) < 95)
+            {
+                c1.SetDamage(c2.Damage);
+                c2.SetDamage(c1.Damage);
+            }
+
+        }
+
     }
 
 }
