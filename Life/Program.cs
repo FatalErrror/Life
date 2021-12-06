@@ -49,23 +49,24 @@ namespace Life
                     pos = ConsoleMouseInput.GetMousePosition();
                     if (pos.Y == 38 && pos.X < 19) break;
                 }*/
-                buffer[pos] = '@';
+            buffer[pos] = '@';
 
 
 
 
-                buffer.Render();
-                /*buffer.ColorRender(new List<Buffer.ColorRenderData>(new Buffer.ColorRenderData[]
-                    {
-                        new Buffer.ColorRenderData(pos, ConsoleColor.White, ConsoleColor.Gray)
-                    }
-                ));*/
-                //Thread.Sleep(10);
+            buffer.Render();
+            /*buffer.ColorRender(new List<Buffer.ColorRenderData>(new Buffer.ColorRenderData[]
+                {
+                    new Buffer.ColorRenderData(pos, ConsoleColor.White, ConsoleColor.Gray)
+                }
+            ));*/
+            //Thread.Sleep(10);*/
             }
-
         }
 
-        static void ConsoleInit(Vector2 size)
+
+
+    static void ConsoleInit(Vector2 size)
         {
             Console.WindowWidth = size.X;
             Console.WindowHeight = size.Y + 1;
@@ -73,6 +74,8 @@ namespace Life
             //Console.ForegroundColor = ConsoleColor.Green;
             Console.Title = "Life";
             Console.CursorVisible = false;
+
+            
         }
 
     }
@@ -530,8 +533,6 @@ namespace Life
             {
                 X = x;
                 Y = y;
-
-
             }
 
             public Vector2 Vector => new Vector2(X, Y);

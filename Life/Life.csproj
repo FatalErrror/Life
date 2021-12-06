@@ -5,4 +5,9 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Engine\Grapfics\" />
+    <Folder Include="Game\" />
+  </ItemGroup>
+
 </Project>
