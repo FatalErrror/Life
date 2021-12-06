@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Life.Engine.Input
 {
-    public partial class KeyboardInput
+    public class KeyboardInput
     {
         private const int KEY_PRESSED = 0x8000;
 
@@ -12,8 +12,34 @@ namespace Life.Engine.Input
         public KeyboardInput()
         {
             _observedKeys = new Dictionary<KeyCodes, KeyHandler>();
+        }
 
+        public bool HandlerExist(KeyCodes key)
+        {
+            return _observedKeys.ContainsKey(key);
+        }
 
+        public void AddKeyHandler(KeyCodes key)
+        {
+            _observedKeys.Add(key, new KeyHandler(key));
+        }
+
+        public void RemoveKeyHandler(KeyCodes key)
+        {
+            _observedKeys.Remove(key);
+        }
+
+        public bool IsPressed(KeyCodes key)
+        {
+            return _observedKeys[key].Pressed();
+        }
+
+        public void ProcessAllKeyHandlers()
+        {
+            foreach (var item in _observedKeys)
+            {
+                item.Value.Process();
+            }
         }
 
         public static bool KeyPressed(KeyCodes key)
