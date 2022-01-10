@@ -7,21 +7,22 @@ namespace Life.Engine.Input
     {
         private const int KEY_PRESSED = 0x8000;
 
-        private Dictionary<KeyCodes, KeyHandler> _observedKeys;
+        private readonly Dictionary<KeyCodes, KeyHandler> _observedKeys;
 
         public KeyboardInput()
         {
             _observedKeys = new Dictionary<KeyCodes, KeyHandler>();
         }
 
-        public bool HandlerExist(KeyCodes key)
+        public bool KeyHandlerExist(KeyCodes key)
         {
             return _observedKeys.ContainsKey(key);
         }
 
         public void AddKeyHandler(KeyCodes key)
         {
-            _observedKeys.Add(key, new KeyHandler(key));
+            if (!_observedKeys.ContainsKey(key))
+                _observedKeys.Add(key, new KeyHandler(key));
         }
 
         public void RemoveKeyHandler(KeyCodes key)

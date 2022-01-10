@@ -1,59 +1,56 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Life.Engine.Core
+namespace Life.Engine.Support
 {
     public static class ConsoleFontHelper
     {
-        private const int FixedWidthTrueType = 54; 
-        private const int StandardOutputHandle = -11;
+        private static readonly IntPtr _consoleOutputHandle = GetStdHandle(-11);
 
-        private static readonly IntPtr ConsoleOutputHandle = GetStdHandle(StandardOutputHandle);
+        //public static SetFontSize
 
 
         public static FontInfo[] SetCurrentFont(string font, short fontSize = 0)
         {
-            Console.WriteLine("Set Current Font: " + font);
-
             FontInfo before = new FontInfo
             {
                 cbSize = Marshal.SizeOf<FontInfo>()
             };
 
-            if (GetCurrentConsoleFontEx(ConsoleOutputHandle, false, ref before))
+            if (GetCurrentConsoleFontEx(_consoleOutputHandle, false, ref before))
             {
 
                 FontInfo set = new FontInfo
                 {
                     cbSize = Marshal.SizeOf<FontInfo>(),
                     FontIndex = 0,
-                    FontFamily = FixedWidthTrueType,
+                    FontFamily = 54,
                     FontName = font,
                     FontWeight = 400,
                     FontSize = fontSize > 0 ? fontSize : before.FontSize
                 };
 
                 // Get some settings from current font.
-                if (!SetCurrentConsoleFontEx(ConsoleOutputHandle, false, ref set))
+                if (!SetCurrentConsoleFontEx(_consoleOutputHandle, false, ref set))
                 {
-                    var ex = Marshal.GetLastWin32Error();
-                    Console.WriteLine("Set error " + ex);
-                    throw new System.ComponentModel.Win32Exception(ex);
+                    var ex = new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                    Logger.ErrorLog(ex);
+                    throw ex;
                 }
 
                 FontInfo after = new FontInfo
                 {
                     cbSize = Marshal.SizeOf<FontInfo>()
                 };
-                GetCurrentConsoleFontEx(ConsoleOutputHandle, false, ref after);
+                GetCurrentConsoleFontEx(_consoleOutputHandle, false, ref after);
 
                 return new[] { before, set, after };
             }
             else
             {
-                var er = Marshal.GetLastWin32Error();
-                Console.WriteLine("Get error " + er);
-                throw new System.ComponentModel.Win32Exception(er);
+                var ex = new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                Logger.ErrorLog(ex);
+                throw ex;
             }
         }
 
